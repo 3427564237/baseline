@@ -55,3 +55,78 @@ for class_idx in target_names_idx:
     selected_indices.extend(chosen)
 print("total selected samples:", len(selected_indices))
 print("first 10 selected indices:", selected_indices[:10])
+
+# 4: 从原始数据集中根据 selected_indices 创建一个新的子数据集
+from torch.utils.data import Dataset
+class FoodSubsetDataset(Dataset):
+    def __init__(self, base_dataset, indices, transform=None):
+        self.base_dataset = base_dataset
+        self.indices = indices
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.indices)
+
+    def __getitem__(self, i):
+        real_idx = self.indices[i]
+        image, label = self.base_dataset[real_idx]
+
+        if self.transform is not None:
+            image = self.transform(image)
+
+        return image, label
+    
+# 创建子数据集
+subset_dataset = FoodSubsetDataset(
+    base_dataset=dataset,
+    indices=selected_indices,
+    transform=None
+)
+
+print("subset size:", len(subset_dataset))
+
+image, label = subset_dataset[0]
+print("first subset image type:", type(image))
+print("first subset label:", label)
+print("first subset class name:", dataset.classes[label])
+
+print("----------------------------------------------------")
+
+# 5: 加载 CLIP 模型和预处理函数
+import torch
+import open_clip
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print("device:", device)
+
+model_name = "ViT-B-16"
+pretrained = "openai"
+
+model, _, preprocess = open_clip.create_model_and_transforms(
+    model_name,
+    pretrained=pretrained
+)
+
+tokenizer = open_clip.get_tokenizer(model_name)
+
+model = model.to(device)
+model.eval()
+
+print("model loaded")
+print("tokenizer loaded")
+print("preprocess:", preprocess)
+
+print("----------------------------------------------------")
+# 6: 对子数据集中的第一张图片进行预处理，并查看结果
+image, label = subset_dataset[0]
+
+print("before preprocess:")
+print("image type:", type(image))
+print("class name:", dataset.classes[label])
+
+image_tensor = preprocess(image)
+
+print("\nafter preprocess:")
+print("tensor type:", type(image_tensor))
+print("tensor shape:", image_tensor.shape)
+print("tensor dtype:", image_tensor.dtype)
