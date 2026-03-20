@@ -1,3 +1,5 @@
 /.vscode
 /data
 EXPERIMENT_LOG.md
+__pycache__/
+*.pyc
