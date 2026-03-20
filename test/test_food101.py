@@ -130,3 +130,64 @@ print("\nafter preprocess:")
 print("tensor type:", type(image_tensor))
 print("tensor shape:", image_tensor.shape)
 print("tensor dtype:", image_tensor.dtype)
+
+
+# 7: 将预处理后的图像加上 batch 维度，并移动到设备上
+image, label = subset_dataset[0]
+
+# 1) 预处理
+image_tensor = preprocess(image)
+print("after preprocess:", image_tensor.shape)
+
+# 2) 加 batch 维度
+image_input = image_tensor.unsqueeze(0).to(device)
+print("after unsqueeze:", image_input.shape)
+print("device:", image_input.device)
+
+# 3) 用 CLIP 编码图像
+with torch.no_grad():
+    image_features = model.encode_image(image_input)
+    image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+
+print("image_features type:", type(image_features))
+print("image_features shape:", image_features.shape)
+print("image_features dtype:", image_features.dtype)
+
+
+# 8: 为每个类创建一个文本提示，并使用 CLIP 编码这些提示
+target_names = ["pizza", "sushi", "ice_cream", "hamburger", "omelette"]
+
+def label_to_text(name):
+    return name.replace("_", " ")
+
+prompts = [f"a photo of a dish of {label_to_text(name)}" for name in target_names]
+
+print("prompts:")
+for p in prompts:
+    print("-", p)
+  
+# 9: 使用 CLIP 的 tokenizer 将文本提示转换为 token，并移动到设备上  
+text_tokens = tokenizer(prompts).to(device)
+
+print("text_tokens shape:", text_tokens.shape)
+
+with torch.no_grad():
+    text_features = model.encode_text(text_tokens)
+    text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+
+print("text_features shape:", text_features.shape)
+
+# 10: 计算图像特征和文本特征之间的相似度（点积），并查看结果
+with torch.no_grad():
+    logits = 100.0 * image_features @ text_features.T
+
+print("logits shape:", logits.shape)
+print("logits:", logits)
+
+# 11: 找到相似度最高的文本提示对应的类，并与图像的真实标签进行比较
+pred_idx = logits.argmax(dim=1).item()
+
+
+print("predicted local index:", pred_idx)
+print("predicted class:", target_names[pred_idx])
+print("correct prediction:", target_names[pred_idx] == dataset.classes[label])
