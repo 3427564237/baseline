@@ -1,0 +1,17 @@
+{
+  "model_name": "ViT-B-16",
+  "pretrained": "openai",
+  "dataset_split": "test",
+  "batch_size": 64,
+  "device": "cuda",
+  "template_count": 12,
+  "max_set_size": 4,
+  "best_prompt_set": {
+    "set_size": 2,
+    "templates": "a restaurant style photo of {} | a professional food photography shot of {}",
+    "overall_accuracy": 0.8537425742574257,
+    "macro_f1": 0.8531492035477505,
+    "top3_accuracy": 0.9588118811881188,
+    "top5_accuracy": 0.9777029702970297
+  }
+}

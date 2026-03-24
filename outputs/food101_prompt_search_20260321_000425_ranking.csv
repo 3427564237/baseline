@@ -1,0 +1,21 @@
+set_size,templates,overall_accuracy,macro_f1,top3_accuracy,top5_accuracy
+2,a restaurant style photo of {} | a professional food photography shot of {},0.8537425742574257,0.8531492035477505,0.9588118811881188,0.9777029702970297
+3,a restaurant style photo of {} | a plated serving of {} | a professional food photography shot of {},0.853029702970297,0.852053351833413,0.9589306930693069,0.9786930693069307
+3,a food photo of {} | a restaurant style photo of {} | a professional food photography shot of {},0.8527524752475247,0.8522557155269188,0.9588118811881188,0.977980198019802
+4,a food photo of {} | a restaurant style photo of {} | a plated serving of {} | a professional food photography shot of {},0.8521584158415841,0.8513049879110843,0.9596435643564356,0.9784158415841584
+4,a restaurant style photo of {} | a plated serving of {} | a professional food photography shot of {} | a menu photo of {},0.852039603960396,0.8511817286450793,0.9587722772277227,0.978019801980198
+1,a restaurant style photo of {},0.8519603960396039,0.8514525019618795,0.9595247524752475,0.9775841584158416
+2,a restaurant style photo of {} | a plated serving of {},0.8519603960396039,0.8510129029228204,0.9593267326732673,0.9788910891089109
+3,a food photo of {} | a restaurant style photo of {} | a plated serving of {},0.8518019801980198,0.8509608525768972,0.9598019801980198,0.9784554455445544
+4,a delicious dish of {} | a restaurant style photo of {} | a plated serving of {} | a professional food photography shot of {},0.8517623762376237,0.8506879459958459,0.9584158415841584,0.978019801980198
+4,a high-resolution photo of {} | a food photo of {} | a restaurant style photo of {} | a plated serving of {},0.8517227722772277,0.8510192623415579,0.9593663366336633,0.9782178217821782
+3,a food photo of {} | a plated serving of {} | a professional food photography shot of {},0.8517227722772277,0.8509037659798884,0.9587326732673267,0.9782178217821782
+3,a high-resolution photo of {} | a restaurant style photo of {} | a plated serving of {},0.8516831683168317,0.8509628086186635,0.9594059405940594,0.9784554455445544
+4,a food photo of {} | a restaurant style photo of {} | a professional food photography shot of {} | a menu photo of {},0.8516039603960396,0.8510454819651488,0.9582178217821782,0.9778613861386138
+3,a restaurant style photo of {} | a professional food photography shot of {} | a menu photo of {},0.8516039603960396,0.8509986083628923,0.9579801980198019,0.9775445544554455
+4,a high-resolution photo of {} | a restaurant style photo of {} | a plated serving of {} | a professional food photography shot of {},0.8516039603960396,0.850876789176444,0.9591287128712871,0.9781782178217822
+3,a photo of a dish of {} | a restaurant style photo of {} | a professional food photography shot of {},0.8514455445544554,0.8505259844412919,0.9584950495049505,0.9776633663366336
+4,a close-up photo of {} | a restaurant style photo of {} | a plated serving of {} | a professional food photography shot of {},0.8514059405940594,0.8505837026508678,0.9586534653465346,0.9777821782178218
+4,a restaurant style photo of {} | a plated serving of {} | a professional food photography shot of {} | a top-down photo of {},0.8514059405940594,0.8505782005560878,0.9582178217821782,0.9777821782178218
+4,a high-resolution photo of {} | a food photo of {} | a restaurant style photo of {} | a professional food photography shot of {},0.8513267326732673,0.8508025343574853,0.9584554455445544,0.9777029702970297
+4,a photo of {} | a restaurant style photo of {} | a plated serving of {} | a professional food photography shot of {},0.8512871287128713,0.8505453339023402,0.9586138613861386,0.9780990099009901
