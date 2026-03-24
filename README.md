@@ -139,5 +139,6 @@ python food101_zeroshot.py
 
 ## 参考
 
-- 原始 Food-101 论文：https://data.vision.ee.ethz.ch/datasets/food-101/
+- Food-101 数据集页面：https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/
+- Food-101 原始论文（ECCV 2014 PDF）：https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/static/bossard_eccv14_food-101.pdf
 - CLIP 模型：https://github.com/openai/CLIP
