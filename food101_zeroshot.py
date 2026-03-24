@@ -27,8 +27,14 @@ DATA_ROOT = "data"
 DATA_SPLIT = "test"
 OUTPUT_DIR = Path("outputs")
 
-# Prompt template is configurable for later experiments.
-PROMPT_TEMPLATE = "a photo of a dish of {}"
+# 使用 prompt_search 找到的最佳组合。
+PROMPT_TEMPLATES = [
+    "a restaurant style photo of {}",
+    "a professional food photography shot of {}",
+]
+
+# 用实验名区分输出版本，避免只有时间戳看不出区别。
+EXPERIMENT_TAG = "best_prompt_pair"
 
 # 研究作业版本：直接跑 Food-101 test 全量数据，不做随机抽样
 BATCH_SIZE = 64
@@ -40,6 +46,10 @@ TOP_CONFUSED_PAIRS_TO_SHOW = 20
 
 def label_to_text(label_name: str) -> str:
     return label_name.replace("_", " ")
+
+
+def get_output_dir():
+    return OUTPUT_DIR / EXPERIMENT_TAG
 
 
 def load_model():
@@ -81,22 +91,26 @@ def load_dataset(preprocess):
     return dataset, loader
 
 
-def build_text_prompts(class_names):
-    prompts = [PROMPT_TEMPLATE.format(label_to_text(name)) for name in class_names]
+def encode_text_features(model, tokenizer, class_names):
+    all_text_features = []
 
-    print("\nPrompts:")
-    for prompt in prompts:
-        print(" -", prompt)
+    print("\nPrompt templates:")
+    for template in PROMPT_TEMPLATES:
+        print(" -", template)
 
-    return prompts
+    for template in PROMPT_TEMPLATES:
+        prompts = [template.format(label_to_text(name)) for name in class_names]
 
+        with torch.no_grad():
+            text_tokens = tokenizer(prompts).to(DEVICE)
+            text_features = model.encode_text(text_tokens)
+            text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 
-def encode_text_features(model, tokenizer, prompts):
-    with torch.no_grad():
-        text_tokens = tokenizer(prompts).to(DEVICE)
-        text_features = model.encode_text(text_tokens)
-        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
-    return text_features
+        all_text_features.append(text_features)
+
+    combined_text_features = torch.stack(all_text_features, dim=0).mean(dim=0)
+    combined_text_features = combined_text_features / combined_text_features.norm(dim=-1, keepdim=True)
+    return combined_text_features
 
 
 def evaluate(model, loader, text_features, class_names):
@@ -209,7 +223,8 @@ def save_csv(path, fieldnames, rows):
 
 
 def save_results(results, class_names):
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    run_output_dir = get_output_dir()
+    run_output_dir.mkdir(parents=True, exist_ok=True)
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     file_stem = f"food101_zeroshot_{run_id}"
 
@@ -221,7 +236,8 @@ def save_results(results, class_names):
         "pretrained": PRETRAINED,
         "dataset_name": DATASET_NAME,
         "dataset_split": DATA_SPLIT,
-        "prompt_template": PROMPT_TEMPLATE,
+        "experiment_tag": EXPERIMENT_TAG,
+        "prompt_templates": PROMPT_TEMPLATES,
         "batch_size": BATCH_SIZE,
         "device": DEVICE,
         "class_count": len(class_names),
@@ -232,9 +248,9 @@ def save_results(results, class_names):
         "per_class_accuracy": results["per_class_accuracy"],
     }
 
-    json_path = OUTPUT_DIR / f"{file_stem}_summary.json"
-    per_class_csv_path = OUTPUT_DIR / f"{file_stem}_per_class_accuracy.csv"
-    confusion_csv_path = OUTPUT_DIR / f"{file_stem}_top_confused_pairs.csv"
+    json_path = run_output_dir / f"{file_stem}_summary.json"
+    per_class_csv_path = run_output_dir / f"{file_stem}_per_class_accuracy.csv"
+    confusion_csv_path = run_output_dir / f"{file_stem}_top_confused_pairs.csv"
 
     save_json(json_path, summary)
     save_csv(
@@ -259,12 +275,16 @@ def print_results(results, class_names, saved_paths):
     per_class_row_map = {row["class_name"]: row for row in results["per_class_rows"]}
 
     print("\n========================")
+    print(f"Experiment Tag:   {EXPERIMENT_TAG}")
     print(f"Overall Accuracy: {results['overall_accuracy']:.4f}")
     if "top3_accuracy" in results["top_k_accuracy"]:
         print(f"Top-3 Accuracy:   {results['top_k_accuracy']['top3_accuracy']:.4f}")
     if "top5_accuracy" in results["top_k_accuracy"]:
         print(f"Top-5 Accuracy:   {results['top_k_accuracy']['top5_accuracy']:.4f}")
     print(f"Macro F1:         {results['macro_f1']:.4f}")
+    print("Prompt templates:")
+    for template in PROMPT_TEMPLATES:
+        print(f" - {template}")
     print("========================")
 
     for class_name in class_names:
@@ -294,8 +314,7 @@ def print_results(results, class_names, saved_paths):
 def main():
     model, preprocess, tokenizer = load_model()
     dataset, loader = load_dataset(preprocess)
-    prompts = build_text_prompts(dataset.classes)
-    text_features = encode_text_features(model, tokenizer, prompts)
+    text_features = encode_text_features(model, tokenizer, dataset.classes)
     results = evaluate(model, loader, text_features, dataset.classes)
     saved_paths = save_results(results, dataset.classes)
     print_results(results, dataset.classes, saved_paths)
