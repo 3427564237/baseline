@@ -1,8 +1,13 @@
-# Food-101 Zero-Shot Classification with CLIP
+# CLIP Baselines for Food-101 and EuroSAT
 
 ## 项目概述
 
-本项目使用 OpenAI 的 CLIP 模型进行 Food-101 数据集的零样本学习（Zero-Shot Learning）分类。CLIP 是一个视觉-语言模型，无需微调即可直接进行分类任务。
+本项目使用 OpenAI 的 CLIP 模型进行零样本学习（Zero-Shot Learning）分类，当前包含两个实验方向：
+
+- `Food-101`：使用官方 `test` split 全量样本跑 baseline
+- `EuroSAT`：使用固定 seed 的 `3:1:1` 分层切分，默认在 `test` split 上跑 baseline
+
+CLIP 是一个视觉-语言模型，无需微调即可直接进行分类任务，后续也可以在固定切分基础上继续做 prompt 改进或轻量微调。
 
 ## 文件说明
 
@@ -10,10 +15,17 @@
 
 - **`food101_zeroshot.py`** ⭐ **主要版本（全量数据）**
   - 使用 Food-101 测试集的全部 25,250 张图像
+  - 使用官方 `test` split 作为正式 baseline
   - 全部 101 个类别
   - 无随机抽样，无额外的 label 映射
   - 优化的 DataLoader 参数（batch_size=64, num_workers, pin_memory）
   - **推荐用于最终报告和结果统计**
+
+- **`eurosat_zeroshot.py`** ⭐ **主要版本（固定切分）**
+  - 自动生成并复用固定 seed 的 `3:1:1` 分层切分
+  - 默认运行 `test` split，适合做正式 baseline
+  - 切分索引会保存到 `splits/`，方便复现实验
+  - 如果需要训练或调参，可把 `DATA_SPLIT` 改成 `train` 或 `val`
 
 - **`food101_zeroshot_subset.py`** 原始版本（子集版本）
   - 支持选择特定类别数量
@@ -45,15 +57,16 @@ CUDA 11.8+ (NVIDIA GPU)
 
 ```bash
 python food101_zeroshot.py
+python eurosat_zeroshot.py
 ```
 
 ### 首次运行
 
-第一次运行会自动下载 Food-101 数据集到 `./data/` 目录（约 8GB）。
+第一次运行会自动下载对应数据集到 `./data/` 目录。
 
 ### 主要参数
 
-在 `food101_zeroshot.py` 开头可调整以下参数：
+在脚本开头可调整以下参数：
 
 | 参数 | 当前值 | 说明 |
 |------|--------|------|
@@ -62,6 +75,8 @@ python food101_zeroshot.py
 | `PIN_MEMORY` | `True` (GPU 时) | 固定 CPU 内存以加速 GPU 搬运 |
 | `MODEL_NAME` | "ViT-B-16" | CLIP 模型大小 |
 | `PRETRAINED` | "openai" | 预训练权重来源 |
+| `DATA_SPLIT` | `test` (EuroSAT) / `test` (Food-101) | 评估使用的数据划分 |
+| `SPLIT_SEED` | 42 (EuroSAT) | 固定随机种子，保证切分可复现 |
 
 ## 输出说明
 
@@ -72,6 +87,7 @@ python food101_zeroshot.py
 3. **Prompt 示例** —— 生成的文本提示（一部分）
 4. **整体准确率** —— Overall Accuracy (xx.xx%)
 5. **每类准确率** —— 按类别统计的准确率、正确数和总数
+6. **EuroSAT 切分信息** —— 记录固定切分文件、比例、seed 和各 split 大小
 
 ## 实验记录
 

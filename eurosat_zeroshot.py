@@ -7,15 +7,16 @@ from pathlib import Path
 
 import open_clip
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 from torchvision.datasets import EuroSAT
 from tqdm import tqdm
 
 try:
     from sklearn.metrics import confusion_matrix, f1_score
+    from sklearn.model_selection import train_test_split
 except ImportError as exc:
     raise ImportError(
-        "scikit-learn is required for Macro F1 and confusion matrix. "
+        "scikit-learn is required for Macro F1, confusion matrix, and dataset splitting. "
         "Install it with: micromamba -r /home/miku/.micromamba install -n pytorch-env scikit-learn"
     ) from exc
 
@@ -25,13 +26,17 @@ MODEL_NAME = "ViT-B-16"
 PRETRAINED = "openai"
 DATASET_NAME = "EuroSAT"
 DATA_ROOT = "data"
-DATA_SPLIT = "all"
+DATA_SPLIT = "test"
 OUTPUT_DIR = Path("outputs")
+SPLIT_DIR = Path("splits")
 
 # Prompt template is configurable for later experiments.
 PROMPT_TEMPLATE = "a satellite image of {}"
 
-# 研究作业版本：直接跑 EuroSAT 全量数据，不做随机抽样
+# 固定 3:1:1 切分，便于后续做 baseline / validation / finetuning 对比
+SPLIT_RATIOS = {"train": 3, "val": 1, "test": 1}
+SPLIT_SEED = 42
+
 BATCH_SIZE = 64
 NUM_WORKERS = min(8, os.cpu_count() or 1)
 PIN_MEMORY = DEVICE == "cuda"
@@ -59,6 +64,75 @@ def load_model():
     return model, preprocess, tokenizer
 
 
+def get_split_file_path():
+    ratio_tag = "_".join(str(SPLIT_RATIOS[name]) for name in ("train", "val", "test"))
+    return SPLIT_DIR / f"eurosat_split_{ratio_tag}_seed{SPLIT_SEED}.json"
+
+
+def validate_split_indices(split_indices, dataset_size):
+    all_indices = []
+    for split_name in ("train", "val", "test"):
+        all_indices.extend(split_indices[split_name])
+
+    if len(all_indices) != dataset_size or len(set(all_indices)) != dataset_size:
+        raise ValueError("Split indices are invalid: expected a full non-overlapping partition.")
+
+
+def create_split_indices(labels):
+    all_indices = list(range(len(labels)))
+
+    train_val_indices, test_indices = train_test_split(
+        all_indices,
+        test_size=SPLIT_RATIOS["test"] / sum(SPLIT_RATIOS.values()),
+        random_state=SPLIT_SEED,
+        shuffle=True,
+        stratify=labels,
+    )
+
+    train_val_labels = [labels[idx] for idx in train_val_indices]
+    train_indices, val_indices = train_test_split(
+        train_val_indices,
+        test_size=SPLIT_RATIOS["val"] / (SPLIT_RATIOS["train"] + SPLIT_RATIOS["val"]),
+        random_state=SPLIT_SEED,
+        shuffle=True,
+        stratify=train_val_labels,
+    )
+
+    split_indices = {
+        "train": sorted(train_indices),
+        "val": sorted(val_indices),
+        "test": sorted(test_indices),
+    }
+    validate_split_indices(split_indices, len(labels))
+    return split_indices
+
+
+def load_or_create_split_indices(dataset):
+    split_path = get_split_file_path()
+    split_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if split_path.exists():
+        with split_path.open("r", encoding="utf-8") as f:
+            payload = json.load(f)
+        split_indices = {
+            split_name: [int(idx) for idx in payload["indices"][split_name]]
+            for split_name in ("train", "val", "test")
+        }
+        validate_split_indices(split_indices, len(dataset))
+        return split_indices, split_path
+
+    split_indices = create_split_indices(dataset.targets)
+    payload = {
+        "dataset_name": DATASET_NAME,
+        "seed": SPLIT_SEED,
+        "ratios": SPLIT_RATIOS,
+        "sizes": {split_name: len(indices) for split_name, indices in split_indices.items()},
+        "indices": split_indices,
+    }
+    save_json(split_path, payload)
+    return split_indices, split_path
+
+
 def load_dataset(preprocess):
     dataset = EuroSAT(
         root=DATA_ROOT,
@@ -72,15 +146,40 @@ def load_dataset(preprocess):
 
     print(f"Total images in dataset: {len(dataset)}")
 
+    split_indices, split_path = load_or_create_split_indices(dataset)
+
+    print("\nFixed split summary (3:1:1, stratified):")
+    for split_name in ("train", "val", "test"):
+        split_size = len(split_indices[split_name])
+        print(f" - {split_name}: {split_size} images ({split_size / len(dataset):.2%})")
+    print(f"Split file: {split_path}")
+
+    if DATA_SPLIT == "all":
+        selected_dataset = dataset
+    else:
+        if DATA_SPLIT not in split_indices:
+            raise ValueError(f"Unsupported DATA_SPLIT: {DATA_SPLIT}")
+        selected_dataset = Subset(dataset, split_indices[DATA_SPLIT])
+
+    print(f"Running split: {DATA_SPLIT}")
+    print(f"Images in selected split: {len(selected_dataset)}")
+
     loader = DataLoader(
-        dataset,
+        selected_dataset,
         batch_size=BATCH_SIZE,
         shuffle=False,
         num_workers=NUM_WORKERS,
         pin_memory=PIN_MEMORY,
         persistent_workers=NUM_WORKERS > 0,
     )
-    return dataset, loader
+    split_metadata = {
+        "split_seed": SPLIT_SEED,
+        "split_ratios": SPLIT_RATIOS,
+        "split_sizes": {split_name: len(indices) for split_name, indices in split_indices.items()},
+        "split_file": str(split_path),
+        "selected_split_size": len(selected_dataset),
+    }
+    return dataset.classes, loader, split_metadata
 
 
 def build_text_prompts(class_names):
@@ -210,7 +309,7 @@ def save_csv(path, fieldnames, rows):
         writer.writerows(rows)
 
 
-def save_results(results, class_names):
+def save_results(results, class_names, split_metadata):
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     file_stem = f"eurosat_zeroshot_{run_id}"
@@ -227,6 +326,11 @@ def save_results(results, class_names):
         "batch_size": BATCH_SIZE,
         "device": DEVICE,
         "class_count": len(class_names),
+        "split_seed": split_metadata["split_seed"],
+        "split_ratios": split_metadata["split_ratios"],
+        "split_sizes": split_metadata["split_sizes"],
+        "split_file": split_metadata["split_file"],
+        "selected_split_size": split_metadata["selected_split_size"],
         "overall_accuracy": results["overall_accuracy"],
         "top3_accuracy": top3_accuracy,
         "top5_accuracy": top5_accuracy,
@@ -295,12 +399,12 @@ def print_results(results, class_names, saved_paths):
 
 def main():
     model, preprocess, tokenizer = load_model()
-    dataset, loader = load_dataset(preprocess)
-    prompts = build_text_prompts(dataset.classes)
+    class_names, loader, split_metadata = load_dataset(preprocess)
+    prompts = build_text_prompts(class_names)
     text_features = encode_text_features(model, tokenizer, prompts)
-    results = evaluate(model, loader, text_features, dataset.classes)
-    saved_paths = save_results(results, dataset.classes)
-    print_results(results, dataset.classes, saved_paths)
+    results = evaluate(model, loader, text_features, class_names)
+    saved_paths = save_results(results, class_names, split_metadata)
+    print_results(results, class_names, saved_paths)
 
 
 if __name__ == "__main__":

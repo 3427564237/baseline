@@ -1,0 +1,39 @@
+{
+  "model_name": "ViT-B-16",
+  "pretrained": "openai",
+  "dataset_name": "EuroSAT",
+  "dataset_split": "test",
+  "prompt_template": "a satellite image of {}",
+  "batch_size": 64,
+  "device": "cuda",
+  "class_count": 10,
+  "split_seed": 42,
+  "split_ratios": {
+    "train": 3,
+    "val": 1,
+    "test": 1
+  },
+  "split_sizes": {
+    "train": 16200,
+    "val": 5400,
+    "test": 5400
+  },
+  "split_file": "splits/eurosat_split_3_1_1_seed42.json",
+  "selected_split_size": 5400,
+  "overall_accuracy": 0.35555555555555557,
+  "top3_accuracy": 0.6494444444444445,
+  "top5_accuracy": 0.7977777777777778,
+  "macro_f1": 0.3257775031491726,
+  "per_class_accuracy": {
+    "AnnualCrop": 0.49166666666666664,
+    "Forest": 0.37,
+    "HerbaceousVegetation": 0.145,
+    "Highway": 0.74,
+    "Industrial": 0.266,
+    "Pasture": 0.055,
+    "PermanentCrop": 0.276,
+    "Residential": 0.71,
+    "River": 0.338,
+    "SeaLake": 0.09666666666666666
+  }
+}
