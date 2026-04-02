@@ -21,17 +21,61 @@ except ImportError as exc:
     ) from exc
 
 # 1. Config
+BASE_DIR = Path(__file__).resolve().parent
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 MODEL_NAME = "ViT-B-16"
 PRETRAINED = "openai"
 DATASET_NAME = "EuroSAT"
-DATA_ROOT = "data"
+DATA_ROOT = BASE_DIR / "data"
 DATA_SPLIT = "test"
-OUTPUT_DIR = Path("outputs")
-SPLIT_DIR = Path("splits")
+OUTPUT_DIR = BASE_DIR / "outputs"
+SPLIT_DIR = BASE_DIR / "splits"
 
-# Prompt template is configurable for later experiments.
-PROMPT_TEMPLATE = "a satellite image of {}"
+# Best prompt setting selected on the validation split via eurosat_prompt_search.py.
+PROMPT_TEMPLATES = (
+    "a remote sensing image of {}",
+    "an overhead view of {}",
+)
+CLASS_NAME_SET_NAME = "student_v1"
+
+CLASS_NAME_SETS = {
+    "default": {
+        "AnnualCrop": "annual crop",
+        "Forest": "forest",
+        "HerbaceousVegetation": "herbaceous vegetation",
+        "Highway": "highway",
+        "Industrial": "industrial",
+        "Pasture": "pasture",
+        "PermanentCrop": "permanent crop",
+        "Residential": "residential",
+        "River": "river",
+        "SeaLake": "sea lake",
+    },
+    "student_v1": {
+        "AnnualCrop": "annual crop field",
+        "Forest": "forest",
+        "HerbaceousVegetation": "grassland",
+        "Highway": "highway road",
+        "Industrial": "industrial area",
+        "Pasture": "pasture land",
+        "PermanentCrop": "orchard or permanent crop",
+        "Residential": "residential area",
+        "River": "river",
+        "SeaLake": "lake or sea water",
+    },
+    "student_v2": {
+        "AnnualCrop": "farmland with annual crops",
+        "Forest": "dense forest area",
+        "HerbaceousVegetation": "low vegetation grassland",
+        "Highway": "major highway road",
+        "Industrial": "industrial buildings area",
+        "Pasture": "grazing pasture field",
+        "PermanentCrop": "orchard or vineyard area",
+        "Residential": "residential buildings area",
+        "River": "river water channel",
+        "SeaLake": "lake or sea water body",
+    },
+}
 
 # 固定 3:1:1 切分，便于后续做 baseline / validation / finetuning 对比
 SPLIT_RATIOS = {"train": 3, "val": 1, "test": 1}
@@ -48,6 +92,12 @@ def label_to_text(label_name: str) -> str:
     # EuroSAT class names are CamelCase, e.g. AnnualCrop -> annual crop.
     spaced = re.sub(r"(?<!^)(?=[A-Z])", " ", label_name)
     return spaced.lower()
+
+
+def get_class_name_map(class_name_set_name=CLASS_NAME_SET_NAME):
+    if class_name_set_name not in CLASS_NAME_SETS:
+        raise ValueError(f"Unknown CLASS_NAME_SET_NAME: {class_name_set_name}")
+    return CLASS_NAME_SETS[class_name_set_name]
 
 
 def load_model():
@@ -182,22 +232,47 @@ def load_dataset(preprocess):
     return dataset.classes, loader, split_metadata
 
 
-def build_text_prompts(class_names):
-    prompts = [PROMPT_TEMPLATE.format(label_to_text(name)) for name in class_names]
+def build_prompt_groups(class_names, class_name_map=None, prompt_templates=None):
+    if class_name_map is None:
+        class_name_map = get_class_name_map()
+    if prompt_templates is None:
+        prompt_templates = PROMPT_TEMPLATES
 
-    print("\nPrompts:")
-    for prompt in prompts:
-        print(" -", prompt)
+    prompt_groups = {}
+    for class_name in class_names:
+        alias = class_name_map.get(class_name, label_to_text(class_name))
+        prompt_groups[class_name] = [template.format(alias) for template in prompt_templates]
+    return prompt_groups
 
-    return prompts
+
+def print_prompt_groups(prompt_groups):
+    print(f"\nClass name set: {CLASS_NAME_SET_NAME}")
+    print("Prompt templates:")
+    for template in PROMPT_TEMPLATES:
+        print(" -", template)
+
+    print("\nPrompt groups:")
+    for class_name, prompts in prompt_groups.items():
+        print(f" - {class_name}:")
+        for prompt in prompts:
+            print(f"    {prompt}")
 
 
-def encode_text_features(model, tokenizer, prompts):
+def encode_text_features(model, tokenizer, class_names, prompt_groups):
+    text_feature_rows = []
+
     with torch.no_grad():
-        text_tokens = tokenizer(prompts).to(DEVICE)
-        text_features = model.encode_text(text_tokens)
-        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
-    return text_features
+        for class_name in class_names:
+            prompts = prompt_groups[class_name]
+            text_tokens = tokenizer(prompts).to(DEVICE)
+            prompt_features = model.encode_text(text_tokens)
+            prompt_features = prompt_features / prompt_features.norm(dim=-1, keepdim=True)
+
+            class_feature = prompt_features.mean(dim=0)
+            class_feature = class_feature / class_feature.norm()
+            text_feature_rows.append(class_feature)
+
+    return torch.stack(text_feature_rows, dim=0)
 
 
 def evaluate(model, loader, text_features, class_names):
@@ -309,7 +384,7 @@ def save_csv(path, fieldnames, rows):
         writer.writerows(rows)
 
 
-def save_results(results, class_names, split_metadata):
+def save_results(results, class_names, split_metadata, prompt_groups):
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     file_stem = f"eurosat_zeroshot_{run_id}"
@@ -322,7 +397,10 @@ def save_results(results, class_names, split_metadata):
         "pretrained": PRETRAINED,
         "dataset_name": DATASET_NAME,
         "dataset_split": DATA_SPLIT,
-        "prompt_template": PROMPT_TEMPLATE,
+        "class_name_set_name": CLASS_NAME_SET_NAME,
+        "class_name_map": get_class_name_map(),
+        "prompt_templates": list(PROMPT_TEMPLATES),
+        "prompt_groups": prompt_groups,
         "batch_size": BATCH_SIZE,
         "device": DEVICE,
         "class_count": len(class_names),
@@ -400,10 +478,11 @@ def print_results(results, class_names, saved_paths):
 def main():
     model, preprocess, tokenizer = load_model()
     class_names, loader, split_metadata = load_dataset(preprocess)
-    prompts = build_text_prompts(class_names)
-    text_features = encode_text_features(model, tokenizer, prompts)
+    prompt_groups = build_prompt_groups(class_names)
+    print_prompt_groups(prompt_groups)
+    text_features = encode_text_features(model, tokenizer, class_names, prompt_groups)
     results = evaluate(model, loader, text_features, class_names)
-    saved_paths = save_results(results, class_names, split_metadata)
+    saved_paths = save_results(results, class_names, split_metadata, prompt_groups)
     print_results(results, class_names, saved_paths)
 
 

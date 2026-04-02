@@ -27,6 +27,11 @@ CLIP 是一个视觉-语言模型，无需微调即可直接进行分类任务�
   - 切分索引会保存到 `splits/`，方便复现实验
   - 如果需要训练或调参，可把 `DATA_SPLIT` 改成 `train` 或 `val`
 
+- **`eurosat_prompt_search.py`** ⭐ **EuroSAT prompt 搜索脚本**
+  - 只在固定 `val` split 上搜索 prompt，避免测试集泄露
+  - 支持多模板组合（multi-prompt）和类名重命名
+  - 会输出 prompt 排名表和最佳配置，方便后续写报告
+
 - **`food101_zeroshot_subset.py`** 原始版本（子集版本）
   - 支持选择特定类别数量
   - 保留了随机抽样逻辑
@@ -58,6 +63,7 @@ CUDA 11.8+ (NVIDIA GPU)
 ```bash
 python food101_zeroshot.py
 python eurosat_zeroshot.py
+python eurosat_prompt_search.py
 ```
 
 ### 首次运行
@@ -88,6 +94,18 @@ python eurosat_zeroshot.py
 4. **整体准确率** —— Overall Accuracy (xx.xx%)
 5. **每类准确率** —— 按类别统计的准确率、正确数和总数
 6. **EuroSAT 切分信息** —— 记录固定切分文件、比例、seed 和各 split 大小
+
+## EuroSAT Prompt 实验建议流程
+
+1. 先运行 `eurosat_zeroshot.py`，得到固定 `test` baseline
+2. 再运行 `eurosat_prompt_search.py`，只在 `val` 上挑选更好的 prompt
+3. 选好 prompt 后，再把最终方案放回 `eurosat_zeroshot.py` 或新脚本中，只在 `test` 上评估一次
+
+这样做的好处是：
+
+- `val` 用来选 prompt
+- `test` 用来做最终汇报
+- 不会因为反复看 `test` 结果而产生数据泄露
 
 ## 实验记录
 

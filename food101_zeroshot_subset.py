@@ -1,5 +1,6 @@
 import random
 from collections import defaultdict
+from pathlib import Path
 
 import torch
 import open_clip
@@ -8,6 +9,7 @@ from torchvision.datasets import Food101
 from tqdm import tqdm
 
 # 1. Config
+BASE_DIR = Path(__file__).resolve().parent
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 MODEL_NAME = "ViT-B-16"
 PRETRAINED = "openai"
@@ -21,7 +23,7 @@ PRETRAINED = "openai"
 # ]
 
 base_dataset = Food101(
-    root="data",
+    root=BASE_DIR / "data",
     split="test",
     download=True,
     transform=None

@@ -1,0 +1,29 @@
+rank,experiment_id,class_name_set,template_count,templates,overall_accuracy,macro_f1
+1,10,student_v1,2,a remote sensing image of {} || an overhead view of {},0.46703703703703703,0.4049514369778146
+2,13,student_v1,3,a satellite image of {} || a remote sensing image of {} || an overhead view of {},0.4638888888888889,0.4066381301367022
+3,7,student_v1,2,a satellite image of {} || an overhead view of {},0.46111111111111114,0.40372869680282814
+4,14,student_v1,3,an aerial image of {} || a remote sensing image of {} || an overhead view of {},0.45944444444444443,0.40163825728088776
+5,12,student_v1,3,a satellite image of {} || an aerial image of {} || an overhead view of {},0.45666666666666667,0.4031009393527084
+6,8,student_v1,2,an aerial image of {} || a remote sensing image of {},0.45666666666666667,0.40005733621772277
+7,11,student_v1,3,a satellite image of {} || an aerial image of {} || a remote sensing image of {},0.44962962962962966,0.4033924655132181
+8,5,student_v1,2,a satellite image of {} || an aerial image of {},0.4462962962962963,0.40950262782638225
+9,3,student_v1,1,a remote sensing image of {},0.4461111111111111,0.39310459183503116
+10,2,student_v1,1,an aerial image of {},0.4457407407407407,0.39840614275288616
+11,9,student_v1,2,an aerial image of {} || an overhead view of {},0.44425925925925924,0.3940532956786346
+12,17,student_v2,1,a remote sensing image of {},0.44333333333333336,0.3847437251098648
+13,4,student_v1,1,an overhead view of {},0.4388888888888889,0.3844895093604427
+14,6,student_v1,2,a satellite image of {} || a remote sensing image of {},0.43703703703703706,0.399461222416266
+15,27,student_v2,3,a satellite image of {} || a remote sensing image of {} || an overhead view of {},0.4311111111111111,0.3786585378525499
+16,24,student_v2,2,a remote sensing image of {} || an overhead view of {},0.42777777777777776,0.3724891376566145
+17,21,student_v2,2,a satellite image of {} || an overhead view of {},0.41814814814814816,0.3706165926258353
+18,28,student_v2,3,an aerial image of {} || a remote sensing image of {} || an overhead view of {},0.4137037037037037,0.36270185767428187
+19,22,student_v2,2,an aerial image of {} || a remote sensing image of {},0.4109259259259259,0.36407853042811295
+20,20,student_v2,2,a satellite image of {} || a remote sensing image of {},0.4075925925925926,0.36907571460851085
+21,26,student_v2,3,a satellite image of {} || an aerial image of {} || an overhead view of {},0.40296296296296297,0.3608845360222033
+22,25,student_v2,3,a satellite image of {} || an aerial image of {} || a remote sensing image of {},0.39796296296296296,0.362660010680789
+23,23,student_v2,2,an aerial image of {} || an overhead view of {},0.392037037037037,0.34904124636220046
+24,1,student_v1,1,a satellite image of {},0.3812962962962963,0.37009464734191894
+25,16,student_v2,1,an aerial image of {},0.37925925925925924,0.34256573726333706
+26,18,student_v2,1,an overhead view of {},0.37537037037037035,0.3353132184263599
+27,19,student_v2,2,a satellite image of {} || an aerial image of {},0.3655555555555556,0.3472062582985803
+28,15,student_v2,1,a satellite image of {},0.33111111111111113,0.31810601490335266

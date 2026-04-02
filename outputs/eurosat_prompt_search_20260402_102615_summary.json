@@ -1,0 +1,211 @@
+{
+  "dataset_name": "EuroSAT",
+  "model_name": "ViT-B-16",
+  "pretrained": "openai",
+  "device": "cuda",
+  "search_split": "val",
+  "split_seed": 42,
+  "split_file": "splits/eurosat_split_3_1_1_seed42.json",
+  "split_sizes": {
+    "train": 16200,
+    "val": 5400,
+    "test": 5400
+  },
+  "prompt_templates": [
+    "a satellite image of {}",
+    "an aerial image of {}",
+    "a remote sensing image of {}",
+    "an overhead view of {}"
+  ],
+  "combination_sizes": [
+    1,
+    2,
+    3
+  ],
+  "active_class_name_set_names": [
+    "student_v1",
+    "student_v2"
+  ],
+  "class_name_sets": {
+    "default": {
+      "AnnualCrop": "annual crop",
+      "Forest": "forest",
+      "HerbaceousVegetation": "herbaceous vegetation",
+      "Highway": "highway",
+      "Industrial": "industrial",
+      "Pasture": "pasture",
+      "PermanentCrop": "permanent crop",
+      "Residential": "residential",
+      "River": "river",
+      "SeaLake": "sea lake"
+    },
+    "student_v1": {
+      "AnnualCrop": "annual crop field",
+      "Forest": "forest",
+      "HerbaceousVegetation": "grassland",
+      "Highway": "highway road",
+      "Industrial": "industrial area",
+      "Pasture": "pasture land",
+      "PermanentCrop": "orchard or permanent crop",
+      "Residential": "residential area",
+      "River": "river",
+      "SeaLake": "lake or sea water"
+    },
+    "student_v2": {
+      "AnnualCrop": "farmland with annual crops",
+      "Forest": "dense forest area",
+      "HerbaceousVegetation": "low vegetation grassland",
+      "Highway": "major highway road",
+      "Industrial": "industrial buildings area",
+      "Pasture": "grazing pasture field",
+      "PermanentCrop": "orchard or vineyard area",
+      "Residential": "residential buildings area",
+      "River": "river water channel",
+      "SeaLake": "lake or sea water body"
+    }
+  },
+  "experiment_count": 28,
+  "best_result": {
+    "rank": 1,
+    "experiment_id": 10,
+    "class_name_set": "student_v1",
+    "template_count": 2,
+    "templates": "a remote sensing image of {} || an overhead view of {}",
+    "overall_accuracy": 0.46703703703703703,
+    "macro_f1": 0.4049514369778146
+  },
+  "best_prompt_groups": {
+    "AnnualCrop": [
+      "a remote sensing image of annual crop field",
+      "an overhead view of annual crop field"
+    ],
+    "Forest": [
+      "a remote sensing image of forest",
+      "an overhead view of forest"
+    ],
+    "HerbaceousVegetation": [
+      "a remote sensing image of grassland",
+      "an overhead view of grassland"
+    ],
+    "Highway": [
+      "a remote sensing image of highway road",
+      "an overhead view of highway road"
+    ],
+    "Industrial": [
+      "a remote sensing image of industrial area",
+      "an overhead view of industrial area"
+    ],
+    "Pasture": [
+      "a remote sensing image of pasture land",
+      "an overhead view of pasture land"
+    ],
+    "PermanentCrop": [
+      "a remote sensing image of orchard or permanent crop",
+      "an overhead view of orchard or permanent crop"
+    ],
+    "Residential": [
+      "a remote sensing image of residential area",
+      "an overhead view of residential area"
+    ],
+    "River": [
+      "a remote sensing image of river",
+      "an overhead view of river"
+    ],
+    "SeaLake": [
+      "a remote sensing image of lake or sea water",
+      "an overhead view of lake or sea water"
+    ]
+  },
+  "top_results": [
+    {
+      "rank": 1,
+      "experiment_id": 10,
+      "class_name_set": "student_v1",
+      "template_count": 2,
+      "templates": "a remote sensing image of {} || an overhead view of {}",
+      "overall_accuracy": 0.46703703703703703,
+      "macro_f1": 0.4049514369778146
+    },
+    {
+      "rank": 2,
+      "experiment_id": 13,
+      "class_name_set": "student_v1",
+      "template_count": 3,
+      "templates": "a satellite image of {} || a remote sensing image of {} || an overhead view of {}",
+      "overall_accuracy": 0.4638888888888889,
+      "macro_f1": 0.4066381301367022
+    },
+    {
+      "rank": 3,
+      "experiment_id": 7,
+      "class_name_set": "student_v1",
+      "template_count": 2,
+      "templates": "a satellite image of {} || an overhead view of {}",
+      "overall_accuracy": 0.46111111111111114,
+      "macro_f1": 0.40372869680282814
+    },
+    {
+      "rank": 4,
+      "experiment_id": 14,
+      "class_name_set": "student_v1",
+      "template_count": 3,
+      "templates": "an aerial image of {} || a remote sensing image of {} || an overhead view of {}",
+      "overall_accuracy": 0.45944444444444443,
+      "macro_f1": 0.40163825728088776
+    },
+    {
+      "rank": 5,
+      "experiment_id": 12,
+      "class_name_set": "student_v1",
+      "template_count": 3,
+      "templates": "a satellite image of {} || an aerial image of {} || an overhead view of {}",
+      "overall_accuracy": 0.45666666666666667,
+      "macro_f1": 0.4031009393527084
+    },
+    {
+      "rank": 6,
+      "experiment_id": 8,
+      "class_name_set": "student_v1",
+      "template_count": 2,
+      "templates": "an aerial image of {} || a remote sensing image of {}",
+      "overall_accuracy": 0.45666666666666667,
+      "macro_f1": 0.40005733621772277
+    },
+    {
+      "rank": 7,
+      "experiment_id": 11,
+      "class_name_set": "student_v1",
+      "template_count": 3,
+      "templates": "a satellite image of {} || an aerial image of {} || a remote sensing image of {}",
+      "overall_accuracy": 0.44962962962962966,
+      "macro_f1": 0.4033924655132181
+    },
+    {
+      "rank": 8,
+      "experiment_id": 5,
+      "class_name_set": "student_v1",
+      "template_count": 2,
+      "templates": "a satellite image of {} || an aerial image of {}",
+      "overall_accuracy": 0.4462962962962963,
+      "macro_f1": 0.40950262782638225
+    },
+    {
+      "rank": 9,
+      "experiment_id": 3,
+      "class_name_set": "student_v1",
+      "template_count": 1,
+      "templates": "a remote sensing image of {}",
+      "overall_accuracy": 0.4461111111111111,
+      "macro_f1": 0.39310459183503116
+    },
+    {
+      "rank": 10,
+      "experiment_id": 2,
+      "class_name_set": "student_v1",
+      "template_count": 1,
+      "templates": "an aerial image of {}",
+      "overall_accuracy": 0.4457407407407407,
+      "macro_f1": 0.39840614275288616
+    }
+  ]
+}

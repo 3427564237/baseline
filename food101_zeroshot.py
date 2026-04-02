@@ -19,13 +19,14 @@ except ImportError as exc:
     ) from exc
 
 # 1. Config
+BASE_DIR = Path(__file__).resolve().parent
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 MODEL_NAME = "ViT-B-16"
 PRETRAINED = "openai"
 DATASET_NAME = "Food-101"
-DATA_ROOT = "data"
+DATA_ROOT = BASE_DIR / "data"
 DATA_SPLIT = "test"
-OUTPUT_DIR = Path("outputs")
+OUTPUT_DIR = BASE_DIR / "outputs"
 
 # Prompt template is configurable for later experiments.
 PROMPT_TEMPLATE = "a photo of a dish of {}"
