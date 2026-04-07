@@ -36,8 +36,8 @@ BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = BASE_DIR / "outputs" / "eurosat_linear_probe"
 LINEAR_PROBE_SEED = 42
 
-# We keep the search space small on purpose so the experiment stays easy to reproduce.
-CANDIDATE_C_VALUES = (0.01, 0.1, 1.0, 10.0, 100.0)
+# We keep the search space simple, but include a wider C range for tuning.
+CANDIDATE_C_VALUES = (0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0)
 
 # Keep test untouched while we are still optimizing.
 # When you are ready for the final report, change this to "test".
@@ -64,6 +64,16 @@ def save_csv(path, fieldnames, rows):
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
+
+
+def save_confusion_matrix_csv(path, conf_matrix, class_names):
+    # Save the full confusion matrix in a wide format so it can be loaded
+    # easily into Excel, pandas, or plotted as a heatmap later.
+    with path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["true_class", *class_names])
+        for true_class, row_values in zip(class_names, conf_matrix.tolist()):
+            writer.writerow([true_class, *row_values])
 
 
 def load_split_loaders(preprocess):
@@ -284,6 +294,7 @@ def save_results(results, class_names, split_metadata, best_result, search_rows,
     summary_path = OUTPUT_DIR / f"{file_stem}_summary.json"
     per_class_csv_path = OUTPUT_DIR / f"{file_stem}_per_class_accuracy.csv"
     confusion_csv_path = OUTPUT_DIR / f"{file_stem}_top_confused_pairs.csv"
+    confusion_matrix_csv_path = OUTPUT_DIR / f"{file_stem}_confusion_matrix.csv"
     search_csv_path = OUTPUT_DIR / f"{file_stem}_c_search.csv"
 
     save_json(summary_path, summary)
@@ -297,6 +308,11 @@ def save_results(results, class_names, split_metadata, best_result, search_rows,
         fieldnames=["true_class", "predicted_class", "count"],
         rows=results["confused_pairs"],
     )
+    save_confusion_matrix_csv(
+        confusion_matrix_csv_path,
+        results["confusion_matrix"],
+        class_names,
+    )
     save_csv(
         search_csv_path,
         fieldnames=["C", "overall_accuracy", "macro_f1"],
@@ -307,6 +323,7 @@ def save_results(results, class_names, split_metadata, best_result, search_rows,
         "summary_path": summary_path,
         "per_class_csv_path": per_class_csv_path,
         "confusion_csv_path": confusion_csv_path,
+        "confusion_matrix_csv_path": confusion_matrix_csv_path,
         "search_csv_path": search_csv_path,
     }
 
@@ -351,6 +368,7 @@ def print_results(results, class_names, best_result, training_info, saved_paths)
     print(f" - JSON summary: {saved_paths['summary_path']}")
     print(f" - Per-class CSV: {saved_paths['per_class_csv_path']}")
     print(f" - Confusion CSV: {saved_paths['confusion_csv_path']}")
+    print(f" - Full confusion matrix CSV: {saved_paths['confusion_matrix_csv_path']}")
     print(f" - C search CSV: {saved_paths['search_csv_path']}")
 
 
