@@ -12,8 +12,8 @@ matplotlib.use("Agg")
 BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = BASE_DIR / "outputs"
 LINEAR_PROBE_OUTPUT_DIR = OUTPUT_DIR / "eurosat_linear_probe"
-PROMPT_SEARCH_OUTPUT_DIR = OUTPUT_DIR / "eurosat_prompt_optimize_val"
-ZERO_SHOT_OUTPUT_DIR = OUTPUT_DIR / "eurosat_311_test"
+BASELINE_ZERO_SHOT_OUTPUT_DIR = OUTPUT_DIR / "eurosat_311_test"
+TUNED_ZERO_SHOT_OUTPUT_DIR = OUTPUT_DIR / "eurosat_tuned_311_test"
 
 
 def find_latest_file(directory, pattern):
@@ -23,28 +23,50 @@ def find_latest_file(directory, pattern):
     return candidates[-1]
 
 
+def find_latest_summary(directory, pattern, split_field=None, split_value=None):
+    candidates = sorted(directory.glob(pattern))
+    if not candidates:
+        raise FileNotFoundError(f"No file matched {pattern} in {directory}")
+
+    if split_field is None:
+        return candidates[-1]
+
+    matching_candidates = []
+    for path in candidates:
+        payload = load_json(path)
+        if payload.get(split_field) == split_value:
+            matching_candidates.append(path)
+
+    if matching_candidates:
+        return matching_candidates[-1]
+
+    raise FileNotFoundError(
+        f"No file matched {pattern} in {directory} with {split_field}={split_value!r}"
+    )
+
+
 def load_json(path):
     with path.open("r", encoding="utf-8") as f:
         return json.load(f)
 
 
-def collect_method_rows(zero_shot_path, tuned_zero_shot_path, linear_probe_path):
-    zero_shot = load_json(zero_shot_path)
+def collect_method_rows(zero_shot_baseline_path, tuned_zero_shot_path, linear_probe_path):
+    zero_shot_baseline = load_json(zero_shot_baseline_path)
     tuned_zero_shot = load_json(tuned_zero_shot_path)
     linear_probe = load_json(linear_probe_path)
 
     rows = [
         {
             "method": "Zero-shot baseline",
-            "split": zero_shot.get("dataset_split", "unknown"),
-            "overall_accuracy": zero_shot["overall_accuracy"],
-            "macro_f1": zero_shot["macro_f1"],
+            "split": zero_shot_baseline.get("dataset_split", "unknown"),
+            "overall_accuracy": zero_shot_baseline["overall_accuracy"],
+            "macro_f1": zero_shot_baseline["macro_f1"],
         },
         {
             "method": "Tuned zero-shot",
-            "split": tuned_zero_shot.get("search_split", "unknown"),
-            "overall_accuracy": tuned_zero_shot["best_result"]["overall_accuracy"],
-            "macro_f1": tuned_zero_shot["best_result"]["macro_f1"],
+            "split": tuned_zero_shot.get("dataset_split", "unknown"),
+            "overall_accuracy": tuned_zero_shot["overall_accuracy"],
+            "macro_f1": tuned_zero_shot["macro_f1"],
         },
         {
             "method": "Linear probe",
@@ -106,13 +128,13 @@ def main():
         "--zero-shot",
         type=Path,
         default=None,
-        help="Path to a zero-shot summary JSON. Defaults to the latest file in outputs/eurosat_311_test.",
+        help="Path to a baseline zero-shot summary JSON. Defaults to the latest file in outputs/eurosat_311_test.",
     )
     parser.add_argument(
         "--tuned-zero-shot",
         type=Path,
         default=None,
-        help="Path to a prompt-search summary JSON. Defaults to the latest file in outputs/eurosat_prompt_optimize_val.",
+        help="Path to a tuned zero-shot summary JSON. Defaults to the latest file in outputs/eurosat_tuned_311_test.",
     )
     parser.add_argument(
         "--linear-probe",
@@ -128,17 +150,23 @@ def main():
     )
     args = parser.parse_args()
 
-    zero_shot_path = args.zero_shot or find_latest_file(
-        ZERO_SHOT_OUTPUT_DIR,
+    zero_shot_path = args.zero_shot or find_latest_summary(
+        BASELINE_ZERO_SHOT_OUTPUT_DIR,
         "eurosat_zeroshot_*_summary.json",
+        split_field="dataset_split",
+        split_value="test",
     )
-    tuned_zero_shot_path = args.tuned_zero_shot or find_latest_file(
-        PROMPT_SEARCH_OUTPUT_DIR,
-        "eurosat_prompt_search_*_summary.json",
+    tuned_zero_shot_path = args.tuned_zero_shot or find_latest_summary(
+        TUNED_ZERO_SHOT_OUTPUT_DIR,
+        "eurosat_zeroshot_*_summary.json",
+        split_field="dataset_split",
+        split_value="test",
     )
-    linear_probe_path = args.linear_probe or find_latest_file(
+    linear_probe_path = args.linear_probe or find_latest_summary(
         LINEAR_PROBE_OUTPUT_DIR,
         "eurosat_linear_probe_*_summary.json",
+        split_field="evaluation_split",
+        split_value="test",
     )
     output_path = args.output or build_default_output_path(linear_probe_path)
 

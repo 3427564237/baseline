@@ -1,0 +1,7 @@
+example_type,split,dataset_index,ground_truth,zero_shot_prediction,linear_probe_prediction,linear_probe_confidence
+Corrected By Linear Probe,test,13668,Industrial,Residential,Industrial,0.9999995575301929
+Corrected By Linear Probe,test,13486,Industrial,Residential,Industrial,0.9999992918604671
+Corrected By Linear Probe,test,13372,Industrial,Residential,Industrial,0.9999991222768679
+Still Wrong After Linear Probe,test,18079,PermanentCrop,Forest,HerbaceousVegetation,0.9991762872637078
+Still Wrong After Linear Probe,test,11332,Highway,Highway,River,0.9956569980009883
+Still Wrong After Linear Probe,test,2924,AnnualCrop,Highway,Highway,0.9939261852070878

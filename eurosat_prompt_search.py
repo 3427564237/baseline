@@ -1,7 +1,9 @@
+import argparse
 import csv
 import json
 from datetime import datetime
 from itertools import combinations
+from pathlib import Path
 
 import torch
 from torch.utils.data import DataLoader, Subset
@@ -24,7 +26,6 @@ from eurosat_zeroshot import (
     DEVICE,
     MODEL_NAME,
     NUM_WORKERS,
-    OUTPUT_DIR,
     PIN_MEMORY,
     PRETRAINED,
     SPLIT_SEED,
@@ -32,6 +33,9 @@ from eurosat_zeroshot import (
     load_model,
     load_or_create_split_indices,
 )
+
+BASE_DIR = Path(__file__).resolve().parent
+OUTPUT_DIR = BASE_DIR / "outputs" / "eurosat_prompt_optimize_val"
 
 # Prompt search should use validation only.
 # Keep the test split untouched until you choose the final prompt set.
@@ -62,7 +66,7 @@ def save_csv(path, fieldnames, rows):
         writer.writerows(rows)
 
 
-def load_search_dataset(preprocess):
+def load_search_dataset(preprocess, search_split):
     dataset = EuroSAT(
         root=DATA_ROOT,
         download=True,
@@ -70,15 +74,15 @@ def load_search_dataset(preprocess):
     )
     split_indices, split_path = load_or_create_split_indices(dataset)
 
-    if SEARCH_SPLIT == "test":
+    if search_split == "test":
         raise ValueError(
             "Prompt search must not run on the test split. "
             "Use SEARCH_SPLIT='val' to avoid test leakage."
         )
-    if SEARCH_SPLIT not in split_indices:
-        raise ValueError(f"Unsupported SEARCH_SPLIT: {SEARCH_SPLIT}")
+    if search_split not in split_indices:
+        raise ValueError(f"Unsupported SEARCH_SPLIT: {search_split}")
 
-    selected_dataset = Subset(dataset, split_indices[SEARCH_SPLIT])
+    selected_dataset = Subset(dataset, split_indices[search_split])
     loader = DataLoader(
         selected_dataset,
         batch_size=BATCH_SIZE,
@@ -88,7 +92,7 @@ def load_search_dataset(preprocess):
         persistent_workers=NUM_WORKERS > 0,
     )
     split_metadata = {
-        "search_split": SEARCH_SPLIT,
+        "search_split": search_split,
         "split_seed": SPLIT_SEED,
         "split_file": str(split_path),
         "split_sizes": {split_name: len(indices) for split_name, indices in split_indices.items()},
@@ -165,8 +169,8 @@ def rank_results(results):
     return ranked_results
 
 
-def save_results(class_names, split_metadata, results):
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+def save_results(class_names, split_metadata, results, output_dir):
+    output_dir.mkdir(parents=True, exist_ok=True)
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     file_stem = f"eurosat_prompt_search_{run_id}"
     ranked_results = rank_results(results)
@@ -197,8 +201,8 @@ def save_results(class_names, split_metadata, results):
         "top_results": ranked_results[:TOP_RESULTS_TO_SHOW],
     }
 
-    summary_path = OUTPUT_DIR / f"{file_stem}_summary.json"
-    ranking_path = OUTPUT_DIR / f"{file_stem}_ranking.csv"
+    summary_path = output_dir / f"{file_stem}_summary.json"
+    ranking_path = output_dir / f"{file_stem}_ranking.csv"
 
     save_json(summary_path, summary)
     save_csv(
@@ -217,9 +221,9 @@ def save_results(class_names, split_metadata, results):
     return summary_path, ranking_path, ranked_results
 
 
-def run_prompt_search():
+def run_prompt_search(search_split, output_dir):
     model, preprocess, tokenizer = load_model()
-    class_names, loader, split_metadata = load_search_dataset(preprocess)
+    class_names, loader, split_metadata = load_search_dataset(preprocess, search_split)
     template_combos = get_template_combinations()
     active_class_name_sets = get_active_class_name_sets()
 
@@ -255,7 +259,12 @@ def run_prompt_search():
                 f"acc={metrics['overall_accuracy']:.4f} | macro_f1={metrics['macro_f1']:.4f}"
             )
 
-    summary_path, ranking_path, ranked_results = save_results(class_names, split_metadata, results)
+    summary_path, ranking_path, ranked_results = save_results(
+        class_names,
+        split_metadata,
+        results,
+        output_dir,
+    )
     return ranked_results, summary_path, ranking_path
 
 
@@ -276,8 +285,31 @@ def print_best_results(results):
         print(f"    {item['templates']}")
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Search EuroSAT zero-shot prompt settings on a validation split."
+    )
+    parser.add_argument(
+        "--search-split",
+        choices=("train", "val"),
+        default=SEARCH_SPLIT,
+        help="Split to use for prompt search. Default: val",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=OUTPUT_DIR,
+        help="Output directory for prompt-search summaries and rankings.",
+    )
+    return parser.parse_args()
+
+
 def main():
-    results, summary_path, ranking_path = run_prompt_search()
+    args = parse_args()
+    results, summary_path, ranking_path = run_prompt_search(
+        args.search_split,
+        args.output_dir,
+    )
     print_best_results(results)
     print("\nSaved files:")
     print(f" - Summary JSON: {summary_path}")

@@ -1,3 +1,4 @@
+import argparse
 import csv
 import json
 import os
@@ -28,7 +29,7 @@ PRETRAINED = "openai"
 DATASET_NAME = "EuroSAT"
 DATA_ROOT = BASE_DIR / "data"
 DATA_SPLIT = "test"
-OUTPUT_DIR = BASE_DIR / "outputs"
+OUTPUT_ROOT = BASE_DIR / "outputs"
 SPLIT_DIR = BASE_DIR / "splits"
 
 # Best prompt setting selected on the validation split via eurosat_prompt_search.py.
@@ -36,6 +37,7 @@ PROMPT_TEMPLATES = (
     "a remote sensing image of {}",
     "an overhead view of {}",
 )
+BASELINE_PROMPT_TEMPLATES = ("a satellite image of {}",)
 CLASS_NAME_SET_NAME = "student_v1"
 
 CLASS_NAME_SETS = {
@@ -98,6 +100,25 @@ def get_class_name_map(class_name_set_name=CLASS_NAME_SET_NAME):
     if class_name_set_name not in CLASS_NAME_SETS:
         raise ValueError(f"Unknown CLASS_NAME_SET_NAME: {class_name_set_name}")
     return CLASS_NAME_SETS[class_name_set_name]
+
+
+def get_ratio_tag():
+    return "".join(str(SPLIT_RATIOS[name]) for name in ("train", "val", "test"))
+
+
+def get_default_output_dir(data_split, class_name_set_name, prompt_templates):
+    uses_baseline_setup = (
+        class_name_set_name == "default"
+        and tuple(prompt_templates) == BASELINE_PROMPT_TEMPLATES
+    )
+    prefix = "eurosat" if uses_baseline_setup else "eurosat_tuned"
+
+    if data_split == "all":
+        suffix = "all_test"
+    else:
+        suffix = f"{get_ratio_tag()}_{data_split}"
+
+    return OUTPUT_ROOT / f"{prefix}_{suffix}"
 
 
 def load_model():
@@ -183,7 +204,7 @@ def load_or_create_split_indices(dataset):
     return split_indices, split_path
 
 
-def load_dataset(preprocess):
+def load_dataset(preprocess, data_split):
     dataset = EuroSAT(
         root=DATA_ROOT,
         download=True,
@@ -204,14 +225,14 @@ def load_dataset(preprocess):
         print(f" - {split_name}: {split_size} images ({split_size / len(dataset):.2%})")
     print(f"Split file: {split_path}")
 
-    if DATA_SPLIT == "all":
+    if data_split == "all":
         selected_dataset = dataset
     else:
-        if DATA_SPLIT not in split_indices:
-            raise ValueError(f"Unsupported DATA_SPLIT: {DATA_SPLIT}")
-        selected_dataset = Subset(dataset, split_indices[DATA_SPLIT])
+        if data_split not in split_indices:
+            raise ValueError(f"Unsupported DATA_SPLIT: {data_split}")
+        selected_dataset = Subset(dataset, split_indices[data_split])
 
-    print(f"Running split: {DATA_SPLIT}")
+    print(f"Running split: {data_split}")
     print(f"Images in selected split: {len(selected_dataset)}")
 
     loader = DataLoader(
@@ -245,10 +266,10 @@ def build_prompt_groups(class_names, class_name_map=None, prompt_templates=None)
     return prompt_groups
 
 
-def print_prompt_groups(prompt_groups):
-    print(f"\nClass name set: {CLASS_NAME_SET_NAME}")
+def print_prompt_groups(prompt_groups, class_name_set_name, prompt_templates):
+    print(f"\nClass name set: {class_name_set_name}")
     print("Prompt templates:")
-    for template in PROMPT_TEMPLATES:
+    for template in prompt_templates:
         print(" -", template)
 
     print("\nPrompt groups:")
@@ -384,8 +405,18 @@ def save_csv(path, fieldnames, rows):
         writer.writerows(rows)
 
 
-def save_results(results, class_names, split_metadata, prompt_groups):
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+def save_results(
+    results,
+    class_names,
+    split_metadata,
+    prompt_groups,
+    data_split,
+    class_name_set_name,
+    class_name_map,
+    prompt_templates,
+    output_dir,
+):
+    output_dir.mkdir(parents=True, exist_ok=True)
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     file_stem = f"eurosat_zeroshot_{run_id}"
 
@@ -396,10 +427,10 @@ def save_results(results, class_names, split_metadata, prompt_groups):
         "model_name": MODEL_NAME,
         "pretrained": PRETRAINED,
         "dataset_name": DATASET_NAME,
-        "dataset_split": DATA_SPLIT,
-        "class_name_set_name": CLASS_NAME_SET_NAME,
-        "class_name_map": get_class_name_map(),
-        "prompt_templates": list(PROMPT_TEMPLATES),
+        "dataset_split": data_split,
+        "class_name_set_name": class_name_set_name,
+        "class_name_map": class_name_map,
+        "prompt_templates": list(prompt_templates),
         "prompt_groups": prompt_groups,
         "batch_size": BATCH_SIZE,
         "device": DEVICE,
@@ -416,9 +447,9 @@ def save_results(results, class_names, split_metadata, prompt_groups):
         "per_class_accuracy": results["per_class_accuracy"],
     }
 
-    json_path = OUTPUT_DIR / f"{file_stem}_summary.json"
-    per_class_csv_path = OUTPUT_DIR / f"{file_stem}_per_class_accuracy.csv"
-    confusion_csv_path = OUTPUT_DIR / f"{file_stem}_top_confused_pairs.csv"
+    json_path = output_dir / f"{file_stem}_summary.json"
+    per_class_csv_path = output_dir / f"{file_stem}_per_class_accuracy.csv"
+    confusion_csv_path = output_dir / f"{file_stem}_top_confused_pairs.csv"
 
     save_json(json_path, summary)
     save_csv(
@@ -475,14 +506,67 @@ def print_results(results, class_names, saved_paths):
     print(f" - Confusion CSV: {saved_paths['confusion_csv_path']}")
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Run EuroSAT zero-shot evaluation with configurable prompts."
+    )
+    parser.add_argument(
+        "--data-split",
+        choices=("train", "val", "test", "all"),
+        default=DATA_SPLIT,
+        help="Dataset split to evaluate. Default: test",
+    )
+    parser.add_argument(
+        "--class-name-set",
+        choices=tuple(CLASS_NAME_SETS),
+        default=CLASS_NAME_SET_NAME,
+        help="Class-name alias set to use for prompt construction.",
+    )
+    parser.add_argument(
+        "--prompt-template",
+        action="append",
+        default=None,
+        help=(
+            "Prompt template to use. Pass multiple times for multi-prompt zero-shot. "
+            "Defaults to the script's tuned prompt templates."
+        ),
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=None,
+        help="Output directory. Defaults to a split-aware folder under outputs/.",
+    )
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
+    prompt_templates = tuple(args.prompt_template) if args.prompt_template else PROMPT_TEMPLATES
+    class_name_map = get_class_name_map(args.class_name_set)
+    output_dir = args.output_dir or get_default_output_dir(
+        args.data_split,
+        args.class_name_set,
+        prompt_templates,
+    )
+
     model, preprocess, tokenizer = load_model()
-    class_names, loader, split_metadata = load_dataset(preprocess)
-    prompt_groups = build_prompt_groups(class_names)
-    print_prompt_groups(prompt_groups)
+    class_names, loader, split_metadata = load_dataset(preprocess, args.data_split)
+    prompt_groups = build_prompt_groups(class_names, class_name_map, prompt_templates)
+    print_prompt_groups(prompt_groups, args.class_name_set, prompt_templates)
     text_features = encode_text_features(model, tokenizer, class_names, prompt_groups)
     results = evaluate(model, loader, text_features, class_names)
-    saved_paths = save_results(results, class_names, split_metadata, prompt_groups)
+    saved_paths = save_results(
+        results,
+        class_names,
+        split_metadata,
+        prompt_groups,
+        args.data_split,
+        args.class_name_set,
+        class_name_map,
+        prompt_templates,
+        output_dir,
+    )
     print_results(results, class_names, saved_paths)
 
 

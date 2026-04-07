@@ -1,0 +1,11 @@
+class_name,per_class_accuracy,sample_count,correct_count
+AnnualCrop,0.16333333333333333,600,98
+Forest,0.9016666666666666,600,541
+HerbaceousVegetation,0.005,600,3
+Highway,0.77,500,385
+Industrial,0.612,500,306
+Pasture,0.0875,400,35
+PermanentCrop,0.024,500,12
+Residential,0.58,600,348
+River,0.522,500,261
+SeaLake,0.8516666666666667,600,511

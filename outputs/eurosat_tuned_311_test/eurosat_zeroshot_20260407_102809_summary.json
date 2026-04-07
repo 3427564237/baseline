@@ -1,0 +1,97 @@
+{
+  "model_name": "ViT-B-16",
+  "pretrained": "openai",
+  "dataset_name": "EuroSAT",
+  "dataset_split": "test",
+  "class_name_set_name": "student_v1",
+  "class_name_map": {
+    "AnnualCrop": "annual crop field",
+    "Forest": "forest",
+    "HerbaceousVegetation": "grassland",
+    "Highway": "highway road",
+    "Industrial": "industrial area",
+    "Pasture": "pasture land",
+    "PermanentCrop": "orchard or permanent crop",
+    "Residential": "residential area",
+    "River": "river",
+    "SeaLake": "lake or sea water"
+  },
+  "prompt_templates": [
+    "a remote sensing image of {}",
+    "an overhead view of {}"
+  ],
+  "prompt_groups": {
+    "AnnualCrop": [
+      "a remote sensing image of annual crop field",
+      "an overhead view of annual crop field"
+    ],
+    "Forest": [
+      "a remote sensing image of forest",
+      "an overhead view of forest"
+    ],
+    "HerbaceousVegetation": [
+      "a remote sensing image of grassland",
+      "an overhead view of grassland"
+    ],
+    "Highway": [
+      "a remote sensing image of highway road",
+      "an overhead view of highway road"
+    ],
+    "Industrial": [
+      "a remote sensing image of industrial area",
+      "an overhead view of industrial area"
+    ],
+    "Pasture": [
+      "a remote sensing image of pasture land",
+      "an overhead view of pasture land"
+    ],
+    "PermanentCrop": [
+      "a remote sensing image of orchard or permanent crop",
+      "an overhead view of orchard or permanent crop"
+    ],
+    "Residential": [
+      "a remote sensing image of residential area",
+      "an overhead view of residential area"
+    ],
+    "River": [
+      "a remote sensing image of river",
+      "an overhead view of river"
+    ],
+    "SeaLake": [
+      "a remote sensing image of lake or sea water",
+      "an overhead view of lake or sea water"
+    ]
+  },
+  "batch_size": 64,
+  "device": "cuda",
+  "class_count": 10,
+  "split_seed": 42,
+  "split_ratios": {
+    "train": 3,
+    "val": 1,
+    "test": 1
+  },
+  "split_sizes": {
+    "train": 16200,
+    "val": 5400,
+    "test": 5400
+  },
+  "split_file": "/home/miku/Documents/PSB/AI/As2/baseline/splits/eurosat_split_3_1_1_seed42.json",
+  "selected_split_size": 5400,
+  "overall_accuracy": 0.46296296296296297,
+  "top3_accuracy": 0.7048148148148148,
+  "top5_accuracy": 0.8362962962962963,
+  "macro_f1": 0.4024683337916926,
+  "per_class_accuracy": {
+    "AnnualCrop": 0.16333333333333333,
+    "Forest": 0.9016666666666666,
+    "HerbaceousVegetation": 0.005,
+    "Highway": 0.77,
+    "Industrial": 0.612,
+    "Pasture": 0.0875,
+    "PermanentCrop": 0.024,
+    "Residential": 0.58,
+    "River": 0.522,
+    "SeaLake": 0.8516666666666667
+  }
+}

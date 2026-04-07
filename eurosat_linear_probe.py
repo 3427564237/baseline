@@ -1,3 +1,4 @@
+import argparse
 import csv
 import inspect
 import json
@@ -42,9 +43,6 @@ CANDIDATE_C_VALUES = (0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0)
 # Keep test untouched while we are still optimizing.
 # When you are ready for the final report, change this to "test".
 EVAL_SPLIT = "val"
-
-# Only refit on train+val for the final test run.
-REFIT_ON_TRAIN_AND_VAL = EVAL_SPLIT == "test"
 
 
 def set_random_seed(seed):
@@ -244,8 +242,8 @@ def search_best_c(train_features, train_labels, val_features, val_labels, class_
     return best_result, search_rows
 
 
-def fit_final_classifier(best_c, train_features, train_labels, val_features, val_labels):
-    if REFIT_ON_TRAIN_AND_VAL:
+def fit_final_classifier(best_c, train_features, train_labels, val_features, val_labels, refit_on_train_and_val):
+    if refit_on_train_and_val:
         final_features = np.concatenate([train_features, val_features], axis=0)
         final_labels = np.concatenate([train_labels, val_labels], axis=0)
         training_split_name = "train+val"
@@ -259,24 +257,34 @@ def fit_final_classifier(best_c, train_features, train_labels, val_features, val
     return classifier, training_split_name, int(final_features.shape[0])
 
 
-def save_results(results, class_names, split_metadata, best_result, search_rows, training_info):
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+def save_results(
+    results,
+    class_names,
+    split_metadata,
+    best_result,
+    search_rows,
+    training_info,
+    eval_split,
+    refit_on_train_and_val,
+    output_dir,
+):
+    output_dir.mkdir(parents=True, exist_ok=True)
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-    file_stem = f"eurosat_linear_probe_{EVAL_SPLIT}_{run_id}"
+    file_stem = f"eurosat_linear_probe_{eval_split}_{run_id}"
 
     summary = {
         "model_name": MODEL_NAME,
         "pretrained": PRETRAINED,
         "dataset_name": DATASET_NAME,
         "method": "linear_probe",
-        "evaluation_split": EVAL_SPLIT,
-        "is_final_test_result": EVAL_SPLIT == "test",
+        "evaluation_split": eval_split,
+        "is_final_test_result": eval_split == "test",
         "device": DEVICE,
         "batch_size": BATCH_SIZE,
         "linear_probe_seed": LINEAR_PROBE_SEED,
         "candidate_c_values": list(CANDIDATE_C_VALUES),
         "best_validation_result": best_result,
-        "refit_on_train_and_val": REFIT_ON_TRAIN_AND_VAL,
+        "refit_on_train_and_val": refit_on_train_and_val,
         "final_training_split": training_info["training_split_name"],
         "final_training_sample_count": training_info["training_sample_count"],
         "class_count": len(class_names),
@@ -291,11 +299,11 @@ def save_results(results, class_names, split_metadata, best_result, search_rows,
         "per_class_accuracy": results["per_class_accuracy"],
     }
 
-    summary_path = OUTPUT_DIR / f"{file_stem}_summary.json"
-    per_class_csv_path = OUTPUT_DIR / f"{file_stem}_per_class_accuracy.csv"
-    confusion_csv_path = OUTPUT_DIR / f"{file_stem}_top_confused_pairs.csv"
-    confusion_matrix_csv_path = OUTPUT_DIR / f"{file_stem}_confusion_matrix.csv"
-    search_csv_path = OUTPUT_DIR / f"{file_stem}_c_search.csv"
+    summary_path = output_dir / f"{file_stem}_summary.json"
+    per_class_csv_path = output_dir / f"{file_stem}_per_class_accuracy.csv"
+    confusion_csv_path = output_dir / f"{file_stem}_top_confused_pairs.csv"
+    confusion_matrix_csv_path = output_dir / f"{file_stem}_confusion_matrix.csv"
+    search_csv_path = output_dir / f"{file_stem}_c_search.csv"
 
     save_json(summary_path, summary)
     save_csv(
@@ -328,14 +336,14 @@ def save_results(results, class_names, split_metadata, best_result, search_rows,
     }
 
 
-def print_results(results, class_names, best_result, training_info, saved_paths):
+def print_results(results, class_names, best_result, training_info, saved_paths, eval_split):
     per_class_row_map = {row["class_name"]: row for row in results["per_class_rows"]}
 
     print("\n========================")
     print("EuroSAT Linear Probe")
     print("========================")
     print(f"Best C on val:     {best_result['C']}")
-    print(f"Evaluation split:  {EVAL_SPLIT}")
+    print(f"Evaluation split:  {eval_split}")
     print(f"Final train split: {training_info['training_split_name']}")
     print(f"Train sample size: {training_info['training_sample_count']}")
     print(f"Overall Accuracy:  {results['overall_accuracy']:.4f}")
@@ -372,7 +380,30 @@ def print_results(results, class_names, best_result, training_info, saved_paths)
     print(f" - C search CSV: {saved_paths['search_csv_path']}")
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Run a CLIP-feature linear probe on EuroSAT."
+    )
+    parser.add_argument(
+        "--eval-split",
+        choices=("val", "test"),
+        default=EVAL_SPLIT,
+        help="Split to evaluate. Use val while tuning and test for the final report.",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=OUTPUT_DIR,
+        help="Output directory for summaries and CSV files.",
+    )
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
+    eval_split = args.eval_split
+    refit_on_train_and_val = eval_split == "test"
+
     set_random_seed(LINEAR_PROBE_SEED)
     model, preprocess, _ = load_model()
     class_names, loaders, split_metadata = load_split_loaders(preprocess)
@@ -381,7 +412,7 @@ def main():
     val_features, val_labels = extract_features(model, loaders["val"], "val")
     test_features = None
     test_labels = None
-    if EVAL_SPLIT == "test":
+    if eval_split == "test":
         test_features, test_labels = extract_features(model, loaders["test"], "test")
 
     print("\nSearching for the best C on the validation split:")
@@ -400,14 +431,15 @@ def main():
         train_labels,
         val_features,
         val_labels,
+        refit_on_train_and_val,
     )
 
-    if EVAL_SPLIT == "test":
+    if eval_split == "test":
         results = evaluate_classifier(final_classifier, test_features, test_labels, class_names)
-    elif EVAL_SPLIT == "val":
+    elif eval_split == "val":
         results = evaluate_classifier(final_classifier, val_features, val_labels, class_names)
     else:
-        raise ValueError(f"Unsupported EVAL_SPLIT: {EVAL_SPLIT}")
+        raise ValueError(f"Unsupported EVAL_SPLIT: {eval_split}")
 
     training_info = {
         "training_split_name": training_split_name,
@@ -420,8 +452,11 @@ def main():
         best_result,
         search_rows,
         training_info,
+        eval_split,
+        refit_on_train_and_val,
+        args.output_dir,
     )
-    print_results(results, class_names, best_result, training_info, saved_paths)
+    print_results(results, class_names, best_result, training_info, saved_paths, eval_split)
 
 
 if __name__ == "__main__":

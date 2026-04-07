@@ -1,0 +1,57 @@
+{
+  "model_name": "ViT-B-16",
+  "pretrained": "openai",
+  "dataset_name": "EuroSAT",
+  "method": "linear_probe",
+  "evaluation_split": "test",
+  "is_final_test_result": true,
+  "device": "cuda",
+  "batch_size": 64,
+  "linear_probe_seed": 42,
+  "candidate_c_values": [
+    0.001,
+    0.01,
+    0.1,
+    1.0,
+    10.0,
+    100.0,
+    1000.0
+  ],
+  "best_validation_result": {
+    "C": 100.0,
+    "overall_accuracy": 0.9535185185185185,
+    "macro_f1": 0.9512841656540306
+  },
+  "refit_on_train_and_val": true,
+  "final_training_split": "train+val",
+  "final_training_sample_count": 21600,
+  "class_count": 10,
+  "split_seed": 42,
+  "split_ratios": {
+    "train": 3,
+    "val": 1,
+    "test": 1
+  },
+  "split_sizes": {
+    "train": 16200,
+    "val": 5400,
+    "test": 5400
+  },
+  "split_file": "/home/miku/Documents/PSB/AI/As2/baseline/splits/eurosat_split_3_1_1_seed42.json",
+  "overall_accuracy": 0.9561111111111111,
+  "top3_accuracy": 0.9975925925925926,
+  "top5_accuracy": 0.9998148148148148,
+  "macro_f1": 0.9546024201214951,
+  "per_class_accuracy": {
+    "AnnualCrop": 0.9383333333333334,
+    "Forest": 0.9766666666666667,
+    "HerbaceousVegetation": 0.9733333333333334,
+    "Highway": 0.916,
+    "Industrial": 0.974,
+    "Pasture": 0.945,
+    "PermanentCrop": 0.912,
+    "Residential": 0.9866666666666667,
+    "River": 0.94,
+    "SeaLake": 0.9816666666666667
+  }
+}
