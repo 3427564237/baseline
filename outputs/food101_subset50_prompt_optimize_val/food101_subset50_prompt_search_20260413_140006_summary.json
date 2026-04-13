@@ -1,0 +1,394 @@
+{
+  "dataset_name": "Food-101",
+  "dataset_variant": "Food-101 50-class subset",
+  "model_name": "ViT-B-16",
+  "pretrained": "openai",
+  "device": "cuda",
+  "search_split": "val",
+  "split_file": "/home/miku/Documents/PSB/AI/As2/baseline/splits/food101_subset50_seed42_val250.json",
+  "split_sizes": {
+    "train": 25000,
+    "val": 12500,
+    "test": 12500
+  },
+  "selected_classes": [
+    "apple_pie",
+    "baklava",
+    "beef_carpaccio",
+    "beef_tartare",
+    "beet_salad",
+    "beignets",
+    "caesar_salad",
+    "caprese_salad",
+    "carrot_cake",
+    "cheese_plate",
+    "cheesecake",
+    "chicken_quesadilla",
+    "chicken_wings",
+    "chocolate_mousse",
+    "clam_chowder",
+    "club_sandwich",
+    "creme_brulee",
+    "croque_madame",
+    "cup_cakes",
+    "donuts",
+    "escargots",
+    "fish_and_chips",
+    "fried_calamari",
+    "garlic_bread",
+    "guacamole",
+    "hamburger",
+    "hot_and_sour_soup",
+    "hummus",
+    "lasagna",
+    "miso_soup",
+    "onion_rings",
+    "oysters",
+    "paella",
+    "pancakes",
+    "pho",
+    "pizza",
+    "pork_chop",
+    "ramen",
+    "ravioli",
+    "red_velvet_cake",
+    "samosa",
+    "sashimi",
+    "scallops",
+    "shrimp_and_grits",
+    "spaghetti_bolognese",
+    "spring_rolls",
+    "strawberry_shortcake",
+    "tacos",
+    "takoyaki",
+    "tiramisu"
+  ],
+  "subset_seed": 42,
+  "subset_class_count": 50,
+  "val_samples_per_class": 250,
+  "prompt_templates": [
+    "a photo of {}",
+    "a photo of a dish of {}",
+    "a close-up photo of {}",
+    "a food photo of {}"
+  ],
+  "combination_sizes": [
+    1,
+    2,
+    3
+  ],
+  "active_class_name_set_names": [
+    "default",
+    "student_v1",
+    "student_v2"
+  ],
+  "class_name_sets": {
+    "default": {},
+    "student_v1": {
+      "apple_pie": "apple pie",
+      "beef_carpaccio": "beef carpaccio appetizer",
+      "beef_tartare": "beef tartare",
+      "caesar_salad": "caesar salad",
+      "caprese_salad": "caprese salad",
+      "cheese_plate": "cheese platter",
+      "chicken_quesadilla": "chicken quesadilla",
+      "chocolate_mousse": "chocolate mousse dessert",
+      "clam_chowder": "clam chowder soup",
+      "club_sandwich": "club sandwich",
+      "creme_brulee": "creme brulee dessert",
+      "croque_madame": "croque madame sandwich",
+      "cup_cakes": "cupcakes",
+      "fish_and_chips": "fish and chips",
+      "fried_calamari": "fried calamari appetizer",
+      "garlic_bread": "garlic bread",
+      "hot_and_sour_soup": "hot and sour soup",
+      "miso_soup": "miso soup",
+      "onion_rings": "onion rings",
+      "pork_chop": "pork chop",
+      "red_velvet_cake": "red velvet cake",
+      "shrimp_and_grits": "shrimp and grits",
+      "spaghetti_bolognese": "spaghetti bolognese",
+      "strawberry_shortcake": "strawberry shortcake"
+    },
+    "student_v2": {
+      "apple_pie": "slice of apple pie",
+      "beef_carpaccio": "thinly sliced beef carpaccio",
+      "beef_tartare": "seasoned beef tartare",
+      "caesar_salad": "classic caesar salad",
+      "caprese_salad": "tomato mozzarella caprese salad",
+      "cheese_plate": "assorted cheese platter",
+      "chicken_quesadilla": "grilled chicken quesadilla",
+      "chocolate_mousse": "rich chocolate mousse dessert",
+      "clam_chowder": "creamy clam chowder soup",
+      "club_sandwich": "triple-layer club sandwich",
+      "creme_brulee": "caramelized creme brulee dessert",
+      "croque_madame": "croque madame toasted sandwich",
+      "cup_cakes": "decorated cupcakes",
+      "fish_and_chips": "fried fish and chips meal",
+      "fried_calamari": "crispy fried calamari rings",
+      "garlic_bread": "toasted garlic bread",
+      "hot_and_sour_soup": "chinese hot and sour soup",
+      "miso_soup": "japanese miso soup",
+      "onion_rings": "crispy onion rings",
+      "pork_chop": "grilled pork chop",
+      "red_velvet_cake": "slice of red velvet cake",
+      "shrimp_and_grits": "shrimp served with grits",
+      "spaghetti_bolognese": "spaghetti with bolognese sauce",
+      "strawberry_shortcake": "strawberry shortcake dessert"
+    }
+  },
+  "experiment_count": 42,
+  "best_result": {
+    "rank": 1,
+    "experiment_id": 4,
+    "class_name_set": "default",
+    "template_count": 1,
+    "templates": "a food photo of {}",
+    "overall_accuracy": 0.8712,
+    "macro_f1": 0.8702494234376715
+  },
+  "best_prompt_groups": {
+    "apple_pie": [
+      "a food photo of apple pie"
+    ],
+    "baklava": [
+      "a food photo of baklava"
+    ],
+    "beef_carpaccio": [
+      "a food photo of beef carpaccio"
+    ],
+    "beef_tartare": [
+      "a food photo of beef tartare"
+    ],
+    "beet_salad": [
+      "a food photo of beet salad"
+    ],
+    "beignets": [
+      "a food photo of beignets"
+    ],
+    "caesar_salad": [
+      "a food photo of caesar salad"
+    ],
+    "caprese_salad": [
+      "a food photo of caprese salad"
+    ],
+    "carrot_cake": [
+      "a food photo of carrot cake"
+    ],
+    "cheese_plate": [
+      "a food photo of cheese plate"
+    ],
+    "cheesecake": [
+      "a food photo of cheesecake"
+    ],
+    "chicken_quesadilla": [
+      "a food photo of chicken quesadilla"
+    ],
+    "chicken_wings": [
+      "a food photo of chicken wings"
+    ],
+    "chocolate_mousse": [
+      "a food photo of chocolate mousse"
+    ],
+    "clam_chowder": [
+      "a food photo of clam chowder"
+    ],
+    "club_sandwich": [
+      "a food photo of club sandwich"
+    ],
+    "creme_brulee": [
+      "a food photo of creme brulee"
+    ],
+    "croque_madame": [
+      "a food photo of croque madame"
+    ],
+    "cup_cakes": [
+      "a food photo of cup cakes"
+    ],
+    "donuts": [
+      "a food photo of donuts"
+    ],
+    "escargots": [
+      "a food photo of escargots"
+    ],
+    "fish_and_chips": [
+      "a food photo of fish and chips"
+    ],
+    "fried_calamari": [
+      "a food photo of fried calamari"
+    ],
+    "garlic_bread": [
+      "a food photo of garlic bread"
+    ],
+    "guacamole": [
+      "a food photo of guacamole"
+    ],
+    "hamburger": [
+      "a food photo of hamburger"
+    ],
+    "hot_and_sour_soup": [
+      "a food photo of hot and sour soup"
+    ],
+    "hummus": [
+      "a food photo of hummus"
+    ],
+    "lasagna": [
+      "a food photo of lasagna"
+    ],
+    "miso_soup": [
+      "a food photo of miso soup"
+    ],
+    "onion_rings": [
+      "a food photo of onion rings"
+    ],
+    "oysters": [
+      "a food photo of oysters"
+    ],
+    "paella": [
+      "a food photo of paella"
+    ],
+    "pancakes": [
+      "a food photo of pancakes"
+    ],
+    "pho": [
+      "a food photo of pho"
+    ],
+    "pizza": [
+      "a food photo of pizza"
+    ],
+    "pork_chop": [
+      "a food photo of pork chop"
+    ],
+    "ramen": [
+      "a food photo of ramen"
+    ],
+    "ravioli": [
+      "a food photo of ravioli"
+    ],
+    "red_velvet_cake": [
+      "a food photo of red velvet cake"
+    ],
+    "samosa": [
+      "a food photo of samosa"
+    ],
+    "sashimi": [
+      "a food photo of sashimi"
+    ],
+    "scallops": [
+      "a food photo of scallops"
+    ],
+    "shrimp_and_grits": [
+      "a food photo of shrimp and grits"
+    ],
+    "spaghetti_bolognese": [
+      "a food photo of spaghetti bolognese"
+    ],
+    "spring_rolls": [
+      "a food photo of spring rolls"
+    ],
+    "strawberry_shortcake": [
+      "a food photo of strawberry shortcake"
+    ],
+    "tacos": [
+      "a food photo of tacos"
+    ],
+    "takoyaki": [
+      "a food photo of takoyaki"
+    ],
+    "tiramisu": [
+      "a food photo of tiramisu"
+    ]
+  },
+  "top_results": [
+    {
+      "rank": 1,
+      "experiment_id": 4,
+      "class_name_set": "default",
+      "template_count": 1,
+      "templates": "a food photo of {}",
+      "overall_accuracy": 0.8712,
+      "macro_f1": 0.8702494234376715
+    },
+    {
+      "rank": 2,
+      "experiment_id": 23,
+      "class_name_set": "student_v1",
+      "template_count": 2,
+      "templates": "a photo of a dish of {} || a food photo of {}",
+      "overall_accuracy": 0.87072,
+      "macro_f1": 0.869776267895608
+    },
+    {
+      "rank": 3,
+      "experiment_id": 18,
+      "class_name_set": "student_v1",
+      "template_count": 1,
+      "templates": "a food photo of {}",
+      "overall_accuracy": 0.87048,
+      "macro_f1": 0.8696361055315711
+    },
+    {
+      "rank": 4,
+      "experiment_id": 9,
+      "class_name_set": "default",
+      "template_count": 2,
+      "templates": "a photo of a dish of {} || a food photo of {}",
+      "overall_accuracy": 0.87,
+      "macro_f1": 0.8689915321405143
+    },
+    {
+      "rank": 5,
+      "experiment_id": 37,
+      "class_name_set": "student_v2",
+      "template_count": 2,
+      "templates": "a photo of a dish of {} || a food photo of {}",
+      "overall_accuracy": 0.86888,
+      "macro_f1": 0.8680184335454695
+    },
+    {
+      "rank": 6,
+      "experiment_id": 26,
+      "class_name_set": "student_v1",
+      "template_count": 3,
+      "templates": "a photo of {} || a photo of a dish of {} || a food photo of {}",
+      "overall_accuracy": 0.8688,
+      "macro_f1": 0.867529479740996
+    },
+    {
+      "rank": 7,
+      "experiment_id": 28,
+      "class_name_set": "student_v1",
+      "template_count": 3,
+      "templates": "a photo of a dish of {} || a close-up photo of {} || a food photo of {}",
+      "overall_accuracy": 0.8688,
+      "macro_f1": 0.8674220267460625
+    },
+    {
+      "rank": 8,
+      "experiment_id": 16,
+      "class_name_set": "student_v1",
+      "template_count": 1,
+      "templates": "a photo of a dish of {}",
+      "overall_accuracy": 0.86792,
+      "macro_f1": 0.8670594094629562
+    },
+    {
+      "rank": 9,
+      "experiment_id": 12,
+      "class_name_set": "default",
+      "template_count": 3,
+      "templates": "a photo of {} || a photo of a dish of {} || a food photo of {}",
+      "overall_accuracy": 0.86776,
+      "macro_f1": 0.8664730572804622
+    },
+    {
+      "rank": 10,
+      "experiment_id": 19,
+      "class_name_set": "student_v1",
+      "template_count": 2,
+      "templates": "a photo of {} || a photo of a dish of {}",
+      "overall_accuracy": 0.8676,
+      "macro_f1": 0.866240963846305
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+rank,experiment_id,class_name_set,template_count,templates,overall_accuracy,macro_f1
+1,4,default,1,a food photo of {},0.8712,0.8702494234376715
+2,23,student_v1,2,a photo of a dish of {} || a food photo of {},0.87072,0.869776267895608
+3,18,student_v1,1,a food photo of {},0.87048,0.8696361055315711
+4,9,default,2,a photo of a dish of {} || a food photo of {},0.87,0.8689915321405143
+5,37,student_v2,2,a photo of a dish of {} || a food photo of {},0.86888,0.8680184335454695
+6,26,student_v1,3,a photo of {} || a photo of a dish of {} || a food photo of {},0.8688,0.867529479740996
+7,28,student_v1,3,a photo of a dish of {} || a close-up photo of {} || a food photo of {},0.8688,0.8674220267460625
+8,16,student_v1,1,a photo of a dish of {},0.86792,0.8670594094629562
+9,12,default,3,a photo of {} || a photo of a dish of {} || a food photo of {},0.86776,0.8664730572804622
+10,19,student_v1,2,a photo of {} || a photo of a dish of {},0.8676,0.866240963846305
+11,32,student_v2,1,a food photo of {},0.86728,0.8663854587305923
+12,7,default,2,a photo of {} || a food photo of {},0.86712,0.8655519302401147
+13,14,default,3,a photo of a dish of {} || a close-up photo of {} || a food photo of {},0.8668,0.8651988830314237
+14,2,default,1,a photo of a dish of {},0.86664,0.8655744210238104
+15,30,student_v2,1,a photo of a dish of {},0.8664,0.8655567320042671
+16,22,student_v1,2,a photo of a dish of {} || a close-up photo of {},0.8664,0.864703477224702
+17,21,student_v1,2,a photo of {} || a food photo of {},0.86616,0.864796944346524
+18,5,default,2,a photo of {} || a photo of a dish of {},0.86608,0.86456115294461
+19,40,student_v2,3,a photo of {} || a photo of a dish of {} || a food photo of {},0.866,0.8648259655580983
+20,25,student_v1,3,a photo of {} || a photo of a dish of {} || a close-up photo of {},0.866,0.8642486019835565
+21,24,student_v1,2,a close-up photo of {} || a food photo of {},0.86592,0.8642660603750464
+22,10,default,2,a close-up photo of {} || a food photo of {},0.86584,0.8639494607602995
+23,27,student_v1,3,a photo of {} || a close-up photo of {} || a food photo of {},0.8656,0.8638629272746294
+24,13,default,3,a photo of {} || a close-up photo of {} || a food photo of {},0.86536,0.8633318919905879
+25,11,default,3,a photo of {} || a photo of a dish of {} || a close-up photo of {},0.8652,0.863237686691989
+26,8,default,2,a photo of a dish of {} || a close-up photo of {},0.86488,0.863004752388036
+27,42,student_v2,3,a photo of a dish of {} || a close-up photo of {} || a food photo of {},0.8648,0.8634334374805874
+28,33,student_v2,2,a photo of {} || a photo of a dish of {},0.86256,0.8612798113499437
+29,36,student_v2,2,a photo of a dish of {} || a close-up photo of {},0.86184,0.8601150004605455
+30,35,student_v2,2,a photo of {} || a food photo of {},0.86176,0.860486409142483
+31,38,student_v2,2,a close-up photo of {} || a food photo of {},0.86144,0.8596531737368222
+32,1,default,1,a photo of {},0.8608,0.8584365186958957
+33,39,student_v2,3,a photo of {} || a photo of a dish of {} || a close-up photo of {},0.8604,0.8586118211044207
+34,6,default,2,a photo of {} || a close-up photo of {},0.86,0.8571411883304091
+35,41,student_v2,3,a photo of {} || a close-up photo of {} || a food photo of {},0.85928,0.8574916571176228
+36,20,student_v1,2,a photo of {} || a close-up photo of {},0.85752,0.8551627815489294
+37,15,student_v1,1,a photo of {},0.85696,0.855221989781106
+38,3,default,1,a close-up photo of {},0.85528,0.8516230259321641
+39,17,student_v1,1,a close-up photo of {},0.85328,0.8500453477239561
+40,34,student_v2,2,a photo of {} || a close-up photo of {},0.85232,0.8502658622336426
+41,31,student_v2,1,a close-up photo of {},0.85096,0.8481163493777695
+42,29,student_v2,1,a photo of {},0.8508,0.8493785930837646
